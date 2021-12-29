@@ -10,6 +10,18 @@
       - [Formatted print](#formatted-print)
         - [Rustc vs Cargo run](#rustc-vs-cargo-run)
         - [ファイルのインポート](#ファイルのインポート)
+      - [Debug](#debug)
+        - [What's Derive?](#whats-derive)
+      - [Display](#display)
+        - [Struct](#struct)
+        - [Write](#write)
+      - [Formatting](#formatting)
+    - [2. Primitives](#2-primitives)
+      - [Literals and opetators](#literals-and-opetators)
+      - [Tuples](#tuples)
+        - [Function](#function)
+      - [Arrays and Slices](#arrays-and-slices)
+    - [3. Custom Types](#3-custom-types)
 
 ## Why I learn a rust?
 
@@ -81,6 +93,25 @@ GoとRustの比較記事とか色々見たんですが、どうにもこうに�
 
 #### Formatted print
 
+```rust
+println!("{0}, this is {1}. {1}, this is {0}", "Alice", "Bob");
+```
+
+そこはかとないpythonみを感じる
+
+> - `format!`: write formatted text to [`String`](https://doc.rust-lang.org/stable/rust-by-example/std/str.html)
+> - `print!`: same as `format!` but the text is printed to the console (io::stdout).
+> - `println!`: same as `print!` but a newline is appended.
+> - `eprint!`: same as `format!` but the text is printed to the standard error (io::stderr).
+> - `eprintln!`: same as `eprint!`but a newline is appended.
+
+まぁまぁ、printlnをメインで使うんだろうなぁと思って他のものはこんなもんもあるんだなぁ程度に見ておく
+
+> - `fmt::Debug`: Uses the `{:?}` marker. Format text for debugging purposes.
+> - `fmt::Display`: Uses the `{}` marker. Format text in a more elegant, user friendly fashion.
+
+デバッグ用にプリントするときはこれなのかな
+
 ##### Rustc vs Cargo run
 
 一旦ここで湧き出た疑問が`rustc`と`cargo run`の二種類が出てきてるぞ？みたいなところ気になった
@@ -112,3 +143,175 @@ use directory_name::file_name
 ここわからんくて躓いた
 
 これ考えるとファイル名は全部アンダースコアで命名した方が良いな…
+
+#### Debug
+
+**デバッグの章あるやんけ！**
+
+> So `fmt::Debug` definitely makes this printable but sacrifices some elegance. Rust also provides "pretty printing" with `{:#?}`.
+
+これ、オブジェクトを整形して表示してくれる様子。
+
+```rust
+// これは整形して表示される
+println!("{{:#?}} is {:#?}", peter);
+
+// これは成形されず表示される
+println!("{{:?}} is {:?}", peter);
+
+// これは無理
+println!("{{}} is {}", peter);
+```
+
+オブジェクト(呼び方合っているかどうかはいまんところわからない)をそのまま表示しようとするとエラーが出る。displayを強く見積もりすぎた。
+
+##### What's Derive?
+
+Deriveって何ーーーーーっ！？
+
+derive: 引き出す、得る、由来を尋ねる....
+
+[日本語ドキュメント](https://doc.rust-jp.rs/rust-by-example-ja/trait/derive.html)(あったんだ…)見たら継承って書かれてた
+
+言語の標準モジュールをインポートしてくる文みたいな捉え方しておこ
+
+#### Display
+
+そんなに言うことはない
+
+console.logくらいに万能ではなく全部の型に対応しているわけではないので困ったらdebugのフォーマットをを使おう
+
+##### Struct
+
+```rust
+struct PointComplexPlane {
+    real: f64,
+    imag: f64,
+}
+```
+
+> - Tuple structs, which are, basically, named tuples.
+> - The classic [C structs](https://en.wikipedia.org/wiki/Struct_(C_programming_language))
+> - Unit structs, which are field-less, are useful for generics.
+
+ヴっ……C言語の構造体とか記憶がない……
+
+##### Write
+
+> Implementing `fmt::Display` for a structure where the elements must each be handled sequentially is tricky. The problem is that each `write!` generates a `fmt::Result`. Proper handling of this requires dealing with *all* the results. Rust provides the `?` operator for exactly this purpose.
+>
+> Using `?` on `write!` looks like this:
+>
+> ```rust
+> // Try `write!` to see if it errors. If it errors, return
+> // the error. Otherwise continue.
+> write!(f, "{}", value)?;
+> ```
+>
+> With `?` available, implementing `fmt::Display` for a `Vec` is straightforward:
+
+?を末尾につければreturnすること無くwriteし続けることができる的な漢字かな？
+
+[公式ドキュメントのDisplay::List](https://doc.rust-lang.org/stable/rust-by-example/hello/print/print_display/testcase_list.html#testcase-list)も例として同じことをやっている様子。
+
+#### Formatting
+
+[参考 [Rust] 文字列のフォーマット指定（println! / format!）](https://qiita.com/YusukeHosonuma/items/13142ab1518ccab425f4#fmtdisplay--fmtdebug)
+
+> - `{}` では `fmt::Display` の実装が使われ
+> - `{:?}` では `fmt::Debug` の実装が使われる
+
+このへんでフッと腑に落ちた
+
+```rust
+impl Display for City {
+    // `f` is a buffer, and this method must write the formatted string into it
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        let lat_c = if self.lat >= 0.0 { 'N' } else { 'S' };
+        let lon_c = if self.lon >= 0.0 { 'E' } else { 'W' 
+        // `write!` is like `format!`, but it will write the formatted string
+        // into a buffer (the first argument)
+        write!(f, "{}: {:.3}°{} {:.3}°{}",
+            self.name, self.lat.abs(), lat_c, self.lon.abs(), lon_c)
+    }
+}
+```
+
+構造体のdisplayとかを設定できるみたい
+
+write!がreturn文のようなものだと思っている
+
+### 2. Primitives
+
+> ### [Scalar Types](https://doc.rust-lang.org/stable/rust-by-example/primitives.html#scalar-types)
+>
+> - signed integers: `i8`, `i16`, `i32`, `i64`, `i128` and `isize` (pointer size)
+> - unsigned integers: `u8`, `u16`, `u32`, `u64`, `u128` and `usize` (pointer size)
+> - floating point: `f32`, `f64`
+> - `char` Unicode scalar values like `'a'`, `'α'` and `'∞'` (4 bytes each)
+> - `bool` either `true` or `false`
+> - and the unit type `()`, whose only possible value is an empty tuple: `()`
+>
+> ### [Compound Types](https://doc.rust-lang.org/stable/rust-by-example/primitives.html#compound-types)
+>
+> - arrays like `[1, 2, 3]`
+> - tuples like `(1, true)`
+
+ある程度なら型推論してくれて弾いてくれるみたい
+
+でもミュータブルとはいえども型は不変 仕方ないね
+
+#### Literals and opetators
+
+別段言うことはない
+
+明示してあげたほうが安全な気がする
+
+> Underscores can be inserted in numeric literals to improve readability, e.g. `1_000` is the same as `1000`, and `0.000_001` is the same as `0.000001`.
+
+これは便利そう
+
+#### Tuples
+
+もはや感覚的に配列みたいな捉え方をしてしまっている…(もちろんタプルという概念なんだろうけども)
+
+型はなんでもブチ込めるみたいな
+
+```rust
+// Tuples can be tuple members
+let tuple_of_tuples = ((1u8, 2u16, 2u32), (4u64, -1i8), -2i16);
+
+// Tuples are printable
+println!("tuple of tuples: {:?}", tuple_of_tuples);
+    
+// But long Tuples cannot be printed
+// let too_long_tuple = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13);
+// println!("too long tuple: {:?}", too_long_tuple);
+// TODO ^ Uncomment the above 2 lines to see the compiler error
+```
+
+んだそりゃあ……
+
+##### Function
+
+```rust
+fn transpose(matrix: Matrix) -> Matrix {
+    let new_matrix: Matrix = matrix;
+    Matrix(new_matrix.0, new_matrix.2, new_matrix.1, new_matrix.3)
+}
+```
+
+すげぇぬるっと関数が出てきている
+
+型についてはTSみたいなノリで書いてなんとかなってそうなのでもう一度出てきた時に確認するべし
+
+#### Arrays and Slices
+
+**Arrayあるんかい！！**
+
+> Slices are similar to arrays, but their length is not known at compile time. Instead, a slice is a two-word object, **the first word is a pointer to the data, and the second word is the length of the slice.** The word size is the same as usize, determined by the processor architecture eg 64 bits on an x86-64. Slices can be used to borrow a section of an array, and have the type signature `&[T]`.
+
+ヴっ………ポインタ……頭がッ……！
+
+### 3. Custom Types
+
