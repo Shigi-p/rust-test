@@ -6,10 +6,11 @@
 // use hello_rust::display;
 // use hello_rust::formatting;
 // use hello_rust::tuples;
-use hello_rust::arrays_and_slices;
+// use hello_rust::arrays_and_slices;
+// use hello_rust::structure;
 
 fn main() {
-    // println!("Hello, world!");
+    println!("Hello, world!");
 
     // NOTE: that is test traits
 
@@ -36,7 +37,10 @@ fn main() {
     // tuples::tuples_test();
 
     // ---------- arrays and slices
-    arrays_and_slices::arrays_and_slices();
+    // arrays_and_slices::arrays_and_slices();
+
+    // ---------- structure
+    // structure::structure();
 }
 
 // copy and paste
