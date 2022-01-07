@@ -1,6 +1,6 @@
 # Rust
 
-[TOC]
+- [Rust](#rust)
 
 Rustと戦ってみようと思う
 
