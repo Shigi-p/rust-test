@@ -20,12 +20,12 @@ impl Item {
     /// 値のチェックを行った上でNameを作成する
     pub fn new(item: &str) -> Result<Self, String> {
         let size = item.chars().count();
-        if size < 1 || size > 10 {
-            return Err("名前は10文字以内です".to_string());
+        if size < 1 || size > 50 {
+            return Err("Todoは50文字以内です".to_string());
         }
 
-        if item.chars().any(|c| !c.is_ascii_alphabetic()) {
-            return Err("名前が使用できる文字種はA-Z, a-zです".to_string());
+        if item.chars().any(|c| !is_available_char(c)) {
+            return Err("使用できない文字が含まれています".to_string());
         }
         Ok(Item(item.to_string()))
     }
@@ -57,8 +57,18 @@ impl std::fmt::Display for Item {
     }
 }
 
+fn is_jp(c: char) -> bool {
+    ('\u{3040}'..='\u{309F}').contains(&c) || // ひらがな
+    ('\u{30A0}'..='\u{30FF}').contains(&c) || // カタカナ
+    ('\u{4E00}'..='\u{9FFF}').contains(&c) // 漢字
+}
+
+fn is_available_char(c: char) -> bool {
+    c.is_ascii_alphabetic() || is_jp(c) || c == ' '
+}
+
 #[test]
-fn test_name() {
+fn test_item() {
     let ok_value = "Nrskt";
     assert!(Item::new(ok_value).is_ok());
 
@@ -76,4 +86,22 @@ fn test_name() {
 
     let ng_value = "NrsktNrsktN";
     assert!(Item::new(ng_value).is_err());
+}
+
+#[test]
+fn test_is_jp() {
+    assert!(is_jp('あ')); // ひらがな
+    assert!(is_jp('ア')); // カタカナ
+    assert!(is_jp('漢')); // 漢字
+    assert!(!is_jp('A')); // 英字
+    assert!(!is_jp('!')); // 記号
+}
+
+#[test]
+fn test_is_available_char() {
+    assert!(is_available_char('あ')); // ひらがな
+    assert!(is_available_char('ア')); // カタカナ
+    assert!(is_available_char('漢')); // 漢字
+    assert!(is_available_char('A')); // 英字
+    assert!(!is_available_char('!')); // 記号
 }
